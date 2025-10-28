@@ -1,9 +1,11 @@
 package com.example.musiletra.data
 
 import com.example.musiletra.model.LyricResponse
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
-
+import retrofit2.Response
 // Esta interface define os endpoints da API para o Retrofit
 interface LyricApiService {
 

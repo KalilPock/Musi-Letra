@@ -1,41 +1,32 @@
 package com.example.musiletra.data
 
+import com.example.musiletra.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 
-// 'object' cria uma instância única (Singleton) para o cliente Retrofit
 object RetrofitClient {
+    private const val BASE_URL = "https://api.audd.io/"
+    
+    // A chave vem do BuildConfig, gerado pelo Secrets Plugin
+    // Nunca aparece diretamente no código!
+    val AUDD_API_KEY: String = BuildConfig.AUDD_API_KEY
 
-    // URL base da API Lyrics.ovh
-    private const val BASE_URL = "https://api.lyrics.ovh/"
-
-    private val logging = HttpLoggingInterceptor().apply {
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        // Em produção, mude para BASIC ou NONE
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .addInterceptor(loggingInterceptor)
         .build()
 
-    // Configura a instância principal do Retrofit usando o cliente padrão
-    // (remove a dependência direta de okhttp3 e do interceptor de logging aqui)
-    private val retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL) // Define a URL base para todas as chamadas
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create()) // Define o Gson como o conversor JSON
-            .build()
-    }
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    // Cria a implementação concreta da interface 'LyricApiService'
-    // É esta instância que o seu Repository usará para fazer as chamadas à API
-    val lyricApiService: LyricApiService by lazy {
-        retrofit.create(LyricApiService::class.java)
-    }
+    val auddService: AuddApiService = retrofit.create(AuddApiService::class.java)
 }

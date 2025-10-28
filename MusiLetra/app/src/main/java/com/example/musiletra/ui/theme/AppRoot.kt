@@ -1,66 +1,7 @@
 package com.example.musiletra.ui
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.musiletra.data.SongRepository
-import com.example.musiletra.model.Song
-import com.example.musiletra.ui.screens.AddEditSongScreen
-import com.example.musiletra.ui.screens.SongDetailScreen
-import com.example.musiletra.ui.screens.SongListScreen
-import kotlinx.coroutines.launch
-
-sealed class Screen {
-    object List : Screen()
-    object Add : Screen()
-    object Edit : Screen()
-    object Detail : Screen()
-}
-
-
-
-class SongViewModel : ViewModel() {
-    var songs by mutableStateOf<List<Song>>(emptyList())
-        private set
-
-    var currentScreen by mutableStateOf<Screen>(Screen.List)
-        private set
-
-    var selectedSongId by mutableStateOf<String?>(null)
-        private set
-
-    init {
-        viewModelScope.launch {
-            SongRepository.songs.collect { songs = it }
-        }
-    }
-
-    fun addSong(title: String, artist: String, lyrics: String) {
-        SongRepository.add(Song(title = title, artist = artist, lyrics = lyrics))
-        navigateToList()
-    }
-
-    fun editSong(id: String, title: String, artist: String, lyrics: String) {
-        val updated = SongRepository.get(id)?.copy(title = title, artist = artist, lyrics = lyrics)
-        if (updated != null) SongRepository.update(updated)
-        navigateToList()
-    }
-
-    fun deleteSong(id: String) {
-        SongRepository.delete(id)
-        navigateToList()
-    }
-
-    fun openDetail(id: String) {
-        selectedSongId = id
-        currentScreen = Screen.Detail
-    }
-
-    fun navigateToAdd() { currentScreen = Screen.Add }
-    fun navigateToEdit(id: String) { selectedSongId = id; currentScreen = Screen.Edit }
-    fun navigateToList() { currentScreen = Screen.List; selectedSongId = null }
-}
-
+import com.example.musiletra.ui.screens.*
 
 @Composable
 fun AppRoot(viewModel: SongViewModel) {
@@ -68,23 +9,56 @@ fun AppRoot(viewModel: SongViewModel) {
         is Screen.List -> SongListScreen(
             songs = viewModel.songs,
             onAdd = { viewModel.navigateToAdd() },
+            onSearch = { viewModel.navigateToSearch() },
             onOpen = { id -> viewModel.openDetail(id) },
             onEdit = { id -> viewModel.navigateToEdit(id) },
             onDelete = { id -> viewModel.deleteSong(id) }
         )
+        
+        is Screen.Search -> SearchScreen(
+            isSearching = viewModel.isSearching,
+            searchResults = viewModel.searchResults,
+            searchError = viewModel.searchError,
+            onSearch = { query -> viewModel.searchByText(query) },
+            onSelectSong = { songItem ->
+                // Adiciona a música diretamente da busca
+                viewModel.addSongFromSearch(songItem)
+            },
+            onClearError = { viewModel.clearSearchError() },
+            onBack = { viewModel.navigateToList() }
+        )
+        
         is Screen.Add -> AddEditSongScreen(
+            isLoadingLyrics = viewModel.isLoadingLyrics,
+            lyricError = viewModel.lyricError,
+            onSearchLyrics = { artist, title ->
+                viewModel.fetchLyrics(artist, title) { lyrics ->
+                    // A letra será preenchida automaticamente
+                }
+            },
+            onClearError = { viewModel.clearLyricError() },
             onSave = { t, a, l -> viewModel.addSong(t, a, l) },
             onCancel = { viewModel.navigateToList() }
         )
+        
         is Screen.Edit -> {
             val id = viewModel.selectedSongId ?: return
             val song = viewModel.songs.firstOrNull { it.id == id } ?: return
             AddEditSongScreen(
                 existing = song,
+                isLoadingLyrics = viewModel.isLoadingLyrics,
+                lyricError = viewModel.lyricError,
+                onSearchLyrics = { artist, title ->
+                    viewModel.fetchLyrics(artist, title) { lyrics ->
+                        // Letra atualizada
+                    }
+                },
+                onClearError = { viewModel.clearLyricError() },
                 onSave = { t, a, l -> viewModel.editSong(id, t, a, l) },
                 onCancel = { viewModel.navigateToList() }
             )
         }
+        
         is Screen.Detail -> {
             val id = viewModel.selectedSongId ?: return
             val song = viewModel.songs.firstOrNull { it.id == id } ?: return

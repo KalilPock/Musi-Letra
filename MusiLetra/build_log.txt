@@ -1,0 +1,36 @@
+Initialized native services in: C:\Users\KalilPock\.gradle\native
+Initialized jansi services in: C:\Users\KalilPock\.gradle\native
+The client will now receive all logging from the daemon (pid: 11688). The daemon log file: C:\Users\KalilPock\.gradle\daemon\8.13\daemon-11688.out.log
+Starting 2nd build in daemon [uptime: 27.362 secs, performance: 98%, GC rate: 1.00/s, heap usage: 2% of 2 GiB]
+Using 12 worker leases.
+Now considering [C:\Users\KalilPock\Documents\DesMobile\Musi-Letra\Musi-Letra-1\MusiLetra] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Settings evaluated using settings file 'C:\Users\KalilPock\Documents\DesMobile\Musi-Letra\Musi-Letra-1\MusiLetra\settings.gradle.kts'.
+Projects loaded. Root project using build file 'C:\Users\KalilPock\Documents\DesMobile\Musi-Letra\Musi-Letra-1\MusiLetra\build.gradle.kts'.
+Included projects: [root project 'MusiLetra', project ':app']
+
+> Configure project :
+Evaluating root project 'MusiLetra' using build file 'C:\Users\KalilPock\Documents\DesMobile\Musi-Letra\Musi-Letra-1\MusiLetra\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.1.0', apply: false]
+Resolved plugin [id: 'com.android.library', version: '8.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '1.7.20', apply: false]
+Resolved plugin [id: 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin', version: '2.0.1', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file 'C:\Users\KalilPock\Documents\DesMobile\Musi-Letra\Musi-Letra-1\MusiLetra\app\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application']
+Resolved plugin [id: 'org.jetbrains.kotlin.android']
+Using default execution profile
+Using Kotlin Gradle Plugin gradle71 variant
+All projects evaluated.
+
+[Incubating] Problems report is available at: file:///C:/Users/KalilPock/Documents/DesMobile/Musi-Letra/Musi-Letra-1/MusiLetra/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+Watched directory hierarchies: []

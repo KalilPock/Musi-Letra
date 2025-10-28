@@ -1,0 +1,37 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Pasta de configuração do IntelliJ/Android Studio
+.idea/
+
+# Arquivos de módulo do IntelliJ/Android Studio
+*.iml
+
+# Pastas de build
+/build/
+/app/build/
+
+# Arquivo de propriedades locais (NUNCA deve ir para o Git)
+local.properties
+
+# Arquivos compilados do Kotlin
+*.class
+
+# Arquivos temporários de editores (como Vim swap files)
+*.swp
+
+# Arquivos APK gerados
+*.apk
+
+# Arquivos do Keystore (se você gerar um para release)
+*.jks
+*.keystore
+
+# Arquivos de log do Gradle
+.gradle/
+**/gradle-app.setting
+
+# Arquivos gerados pelo Android Studio
+captures/
+output/

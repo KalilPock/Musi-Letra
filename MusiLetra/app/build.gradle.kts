@@ -1,11 +1,13 @@
 // Define os plugins a serem aplicados a este módulo (app)
-// Usando id() para garantir a aplicação correta dos plugins essenciais
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    // Aplica o plugin do Compilador Compose pelo ID, a versão virá das configurações gerais
-    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.compose")
 }
+
+import java.io.File
+import java.io.FileInputStream
+import java.util.Properties
 
 // Bloco de configuração específico do Android
 android {
@@ -23,6 +25,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+
+    val secretsFile = File(project.rootDir, "secrets.properties")
+    if (secretsFile.exists()) {
+        val properties = Properties()
+        properties.load(FileInputStream(secretsFile))
+        android.defaultConfig.buildConfigField("String", "AUDD_API_KEY", "\"${properties.getProperty("AUDD_API_KEY")}\"")
+    } else {
+        android.defaultConfig.buildConfigField("String", "AUDD_API_KEY", "\"\"")
     }
 
     buildTypes {
@@ -44,8 +55,8 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
-        // Habilita o Jetpack Compose
         compose = true
+        buildConfig = true
     }
     // Configurações do Compose - A versão da extensão do compilador é crucial
     composeOptions {
@@ -62,36 +73,37 @@ android {
 
 // Bloco onde as dependências são declaradas
 dependencies {
+    // AndroidX Core e Lifecycle
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.activity:activity-compose:1.8.0")
 
-    // Core & Lifecycle
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose) // ViewModel Compose
+    // Compose
+    implementation(platform("androidx.compose:compose-bom:2023.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    
+    // Material Icons Extended
+    implementation("androidx.compose.material:material-icons-extended")
 
-    // Compose BOM e dependências Compose UI (versões geridas pelo BOM)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended) // Ícones extendidos
+    // Networking
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    // Networking: Retrofit, Gson, OkHttp (Verifique se os aliases estão no .toml)
-    implementation(libs.retrofit.core)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging.interceptor)
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // Testes Unitários
-    testImplementation(libs.junit)
-
-    // Testes de Instrumentação (UI)
-    androidTestImplementation(libs.androidx.test.ext.junit) // Verifique o alias no .toml
-    androidTestImplementation(libs.androidx.test.espresso.core) // Verifique o alias no .toml
-    androidTestImplementation(platform(libs.androidx.compose.bom)) // BOM para testes
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-
-    // Ferramentas de Debug (Compose)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // Debug
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

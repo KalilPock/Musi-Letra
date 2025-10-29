@@ -151,7 +151,7 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(searchResults) { song =>
+                    items(searchResults) { song ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()

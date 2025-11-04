@@ -20,13 +20,6 @@ class SongViewModel : ViewModel() {
     var onlineSearchResults by mutableStateOf<List<AudDSong>>(emptyList())
         private set
 
-    // Navigation state
-    var currentScreen by mutableStateOf<Screen>(Screen.List)
-        private set
-
-    var selectedSongId by mutableStateOf<String?>(null)
-        private set
-
     init {
         // Load the locally saved songs
         viewModelScope.launch {
@@ -38,19 +31,15 @@ class SongViewModel : ViewModel() {
 
     fun addSong(title: String, artist: String, lyrics: String) {
         SongRepository.add(Song(title = title, artist = artist, lyrics = lyrics))
-        // Optional: navigate back to the main list after adding
-        navigateToList()
     }
 
     fun editSong(id: String, title: String, artist: String, lyrics: String) {
         val updated = SongRepository.get(id)?.copy(title = title, artist = artist, lyrics = lyrics)
         if (updated != null) SongRepository.update(updated)
-        navigateToList()
     }
 
     fun deleteSong(id: String) {
         SongRepository.delete(id)
-        navigateToList()
     }
 
     // --- Online Search ---
@@ -69,15 +58,4 @@ class SongViewModel : ViewModel() {
         }
     }
 
-    // --- Navigation ---
-
-    fun openDetail(id: String) {
-        selectedSongId = id
-        currentScreen = Screen.Detail
-    }
-
-    fun navigateToAdd() { currentScreen = Screen.Add }
-    fun navigateToEdit(id: String) { selectedSongId = id; currentScreen = Screen.Edit }
-    fun navigateToOnlineSearch() { currentScreen = Screen.OnlineSearch; onlineSearchResults = emptyList() }
-    fun navigateToList() { currentScreen = Screen.List; selectedSongId = null }
 }

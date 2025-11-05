@@ -19,7 +19,7 @@ data class AudDSong(
 )
 
 // Retrofit service interface
-interface AudDApiService {
+public interface AudDApiService {
     @GET("/")
     suspend fun findByLyrics(
         @Query("q") query: String,

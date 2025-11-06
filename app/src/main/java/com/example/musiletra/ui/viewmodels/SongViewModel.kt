@@ -1,4 +1,4 @@
-package com.example.musiletra.ui
+package com.example.musiletra.ui.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

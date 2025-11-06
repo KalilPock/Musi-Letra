@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip // 4. For clipping the image to the card shape
@@ -30,16 +31,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.musiletra.R
 import com.example.musiletra.model.Playlist
+import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
 
 @Composable
-fun PlaylistsScreen(navController: NavController) {
+fun PlaylistsScreen(navController: NavController, viewModel : PlaylistsViewModel = PlaylistsViewModel()) {
 
-    val playlists = listOf(
-        Playlist(1, "Rock Classics", listOf()),
-        Playlist(2, "Lofi Beats to Study To", listOf()),
-        Playlist(3, "80s Pop Hits", listOf()),
-        Playlist(4, "Acoustic Mornings", listOf()),
-    )
+//  Força a chamada de renderização do viewModel para ser executada uma única vez quando a tela é criada
+    LaunchedEffect(Unit) {
+        viewModel.startLoadingPlaylists()
+    }
+    val playlists = viewModel.playlist.value
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),

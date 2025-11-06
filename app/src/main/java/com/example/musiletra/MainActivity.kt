@@ -17,6 +17,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,7 +45,8 @@ class MainActivity : ComponentActivity() {
                         currentRoute = currentRoute,
                         canNavigateBack = navController.previousBackStackEntry != null,
                         navigateUp = { navController.navigateUp() })
-                }
+                },
+                    modifier = Modifier.padding(10.dp)
 
                 ) { innerPadding ->
                     NavHost(

@@ -23,16 +23,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.musiletra.model.Song
+import com.example.musiletra.ui.viewmodels.SongViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditSongScreen(
-    existing: Song? = null, onSave: (String, String, String) -> Unit, onCancel: () -> Unit
+    songViewModel: SongViewModel,
+    existingSongId: String? = null,
+    onSave: () -> Unit, // Alterado para não precisar passar os parâmetros
+    onCancel: () -> Unit
 ) {
-    var title by remember { mutableStateOf(existing?.title ?: "") }
-    var artist by remember { mutableStateOf(existing?.artist ?: "") }
-    var lyrics by remember { mutableStateOf(existing?.lyrics ?: "") }
+    val existingSong = existingSongId?.let { id ->
+        songViewModel.songs.find { it.id == id }
+    }
+
+    var title by remember { mutableStateOf(existingSong?.title ?: "") }
+    var artist by remember { mutableStateOf(existingSong?.artist ?: "") }
+    var lyrics by remember { mutableStateOf(existingSong?.lyrics ?: "") }
 
     Column(
         Modifier
@@ -68,9 +75,14 @@ fun AddEditSongScreen(
             TextButton(onClick = onCancel) { Text("Cancelar") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = {
-                if (title.isNotBlank() && lyrics.isNotBlank()) onSave(
-                    title, artist, lyrics
-                )
+                if (title.isNotBlank() && lyrics.isNotBlank()) {
+                    if (existingSongId != null) {
+                        songViewModel.editSong(existingSongId, title, artist, lyrics)
+                    } else {
+                        songViewModel.addSong(title, artist, lyrics)
+                    }
+                    onSave() // Navega de volta após salvar
+                }
             }) {
                 Text("Salvar")
             }

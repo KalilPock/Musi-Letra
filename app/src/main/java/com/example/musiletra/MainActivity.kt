@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,17 +19,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.musiletra.ui.screens.AddEditSongScreen
 import com.example.musiletra.ui.screens.OnlineSearchScreen
 import com.example.musiletra.ui.screens.PlaylistDetailsScreen
+import com.example.musiletra.ui.screens.PlaylistInfoScreen
 import com.example.musiletra.ui.screens.PlaylistsScreen
-import com.example.musiletra.ui.screens.SongListScreen
+import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
+import com.example.musiletra.ui.viewmodels.SongViewModel
+
+val playlistsViewModel = PlaylistsViewModel()
+val songViewModel = SongViewModel()
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -39,15 +46,15 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
-
-                Scaffold(topBar = {
-                    MusiLetraTopAppBar(
-                        currentRoute = currentRoute,
-                        canNavigateBack = navController.previousBackStackEntry != null,
-                        navigateUp = { navController.navigateUp() })
-                },
-                    modifier = Modifier.padding(10.dp)
-
+                Scaffold(
+                    topBar = {
+                        MusiLetraTopAppBar(
+                            currentRoute = currentRoute,
+                            canNavigateBack = navController.previousBackStackEntry != null,
+                            navigateUp = { navController.navigateUp() },
+                            navController = navController
+                        )
+                    }, modifier = Modifier.padding(10.dp)
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -55,34 +62,78 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                     ) {
                         composable("playlists") {
-                            PlaylistsScreen(navController = navController)
+                            PlaylistsScreen(
+                                navController = navController, viewModel = playlistsViewModel
+                            )
                         }
                         composable(
-                            route = "playlist_details/{playlistId}",
+                            route = "playlists/{playlistId}",
                             arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
                         ) { navBackStackEntry ->
                             val playlistId = navBackStackEntry.arguments?.getInt("playlistId")
                             if (playlistId != null) {
-
                                 PlaylistDetailsScreen(
+                                    playlistsViewModel = playlistsViewModel,
+                                    songViewModel = songViewModel,
                                     playlistId = playlistId,
-                                    onOpenSong = { songId -> navController.navigate("song_detail/$songId") },
-                                    onEditSong = { songId -> /* TODO: navController.navigate("edit_song/$songId") */ },
-                                    onDeleteSong = { songId -> /* TODO: viewModel.deleteSong(songId) */ })
+                                    onOpenSong = { songId -> navController.navigate("song/$songId") },
+                                    onEditSong = { songId -> navController.navigate("edit_song/$songId") },
+                                    onDeleteSong = { songId -> songViewModel.deleteSong(songId) }
+                                )
                             } else {
                                 Text("Error: Playlist ID not found.")
                             }
                         }
-                        composable("song_list") {
-                            SongListScreen(/* Pass necessary parameters */)
+                        composable(
+                            route = "playlists/info/{playlistId}",
+                            arguments = listOf(navArgument("playlistId") {
+                                type = NavType.IntType
+                            })
+                        ) { navBackStackEntry ->
+                            val playlistId = navBackStackEntry.arguments?.getInt("playlistId")
+                            if (playlistId != null) {
+                                PlaylistInfoScreen(
+                                    navController = navController,
+                                    idPlaylist = playlistId,
+                                    viewModel = playlistsViewModel
+                                )
+                            } else {
+                                Text("Error: Playlist ID not found.")
+                            }
                         }
                         composable(
-                            route = "song_detail/{songId}",
-                            arguments = listOf(navArgument("songId") {
-                                type = NavType.StringType
-                            }) // Changed to String as per your model
-                        ) {
-                            OnlineSearchScreen()
+                            route = "song/{songId}",
+                            arguments = listOf(navArgument("songId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val songId = backStackEntry.arguments?.getString("songId")
+                            AddEditSongScreen(
+                                songViewModel = songViewModel,
+                                existingSongId = songId,
+                                onSave = { navController.popBackStack() },
+                                onCancel = { navController.popBackStack() }
+                            )
+                        }
+                        composable(
+                            route = "edit_song/{songId}",
+                            arguments = listOf(navArgument("songId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val songId = backStackEntry.arguments?.getString("songId")
+                            AddEditSongScreen(
+                                songViewModel = songViewModel,
+                                existingSongId = songId,
+                                onSave = { navController.popBackStack() },
+                                onCancel = { navController.popBackStack() }
+                            )
+                        }
+                        composable("add_song") {
+                            AddEditSongScreen(
+                                songViewModel = songViewModel,
+                                onSave = { navController.popBackStack() },
+                                onCancel = { navController.popBackStack() }
+                            )
+                        }
+                        composable("online_search") {
+                            OnlineSearchScreen(songViewModel = songViewModel)
                         }
                     }
                 }
@@ -97,29 +148,42 @@ fun MusiLetraTopAppBar(
     currentRoute: String?,
     canNavigateBack: Boolean,
     navigateUp: () -> Unit,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    TopAppBar(title = {
-        val title = when (currentRoute) {
-            "playlists" -> "Minhas Playlists"
-            "playlist_details/{playlistId}" -> "Detalhes da Playlist"
-            else -> "Musiletra"
-        }
-        Text(title)
-    }, modifier = modifier, navigationIcon = {
-        if (canNavigateBack) {
-            IconButton(onClick = navigateUp) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Voltar"
-                )
+    TopAppBar(
+        title = {
+            val title = when (currentRoute) {
+                "playlists" -> "Minhas Playlists"
+                "playlists/{playlistId}" -> "Detalhes da Playlist"
+                "playlists/info/{playlistId}" -> "Informações da Playlist"
+                "song/{songId}" -> "Detalhes da Música"
+                "edit_song/{songId}" -> "Editar Música"
+                "add_song" -> "Adicionar Música"
+                "online_search" -> "Buscar Online"
+                else -> "Musiletra"
+            }
+            Text(title)
+        },
+        modifier = modifier,
+        navigationIcon = {
+            if (canNavigateBack) {
+                IconButton(onClick = navigateUp) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar"
+                    )
+                }
+            }
+        },
+        actions = {
+            if (currentRoute == "playlists") {
+                IconButton(onClick = { navController.navigate("add_song") }) {
+                    Icon(Icons.Default.Add, contentDescription = "Adicionar música")
+                }
+                IconButton(onClick = { navController.navigate("online_search") }) {
+                    Icon(Icons.Default.Search, contentDescription = "Pesquisar online")
+                }
             }
         }
-    }, actions = {
-        if (currentRoute == "playlists") {
-            IconButton(onClick = { /* TODO: Handle Search Navigation */ }) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
-            }
-        }
-    })
+    )
 }

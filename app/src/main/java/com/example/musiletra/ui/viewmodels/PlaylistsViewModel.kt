@@ -1,7 +1,9 @@
 package com.example.musiletra.ui.viewmodels
 
-import androidx.compose.runtime.State
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musiletra.model.Playlist
@@ -10,74 +12,100 @@ import kotlinx.coroutines.launch
 
 private val static_playlists = listOf<Playlist>(
     Playlist(
-        id = 1, name = "Rock Classics",
-        songs = listOf(
-            Song(
-                id = "1",
-                title = "Bohemian Rhapsody",
-                artist = "Queen",
-                lyrics = "Lyrics...",
-            ),
-            Song(
-                id = "2",
-                title = "Stairway to Heaven",
-                artist = "Led Zeppelin",
-                lyrics = "Lyrics...",
-            ),
-        ),
+        id = 1,
+        name = "Rock Classics",
+        songs = listOf("s1", "s2"),
+        description = "Musicas de rock clássicas"
     ), Playlist(
-        id = 2, name = "Lofi Beats to Study To",
-        songs = listOf(
-            Song(
-                id = "3",
-                title = "Affection",
-                artist = "Jinsang",
-                lyrics = "Lyrics...",
-            ),
-            Song(
-                id = "4",
-                title = "Sunday Morning",
-                artist = "Trell Daniels",
-                lyrics = "Lyrics...",
-            ),
-        ),
+        id = 2,
+        name = "Lofi Beats to Study To",
+        songs = listOf("s3"),
+        description = "Musicas para relaxar e estudar"
     ), Playlist(
-        id = 3, name = "80s Pop Hits",
-        songs = listOf(
-            Song(
-                id = "5",
-                title = "Fast Car",
-                artist = "Tracy Chapman",
-                lyrics = "Lyrics...",
-            ),
-        ),
+        id = 3,
+        name = "80s Pop Hits",
+        songs = emptyList(),
+        description = "Musicas populares da década de 80"
     ), Playlist(
-        id = 4, name = "Acoustic Mornings", songs = listOf(
-            Song(
-                id = "6",
-                title = "Fast Car",
-                artist = "Tracy Chapman",
-                lyrics = "Lyrics...",
-            ),
-        )
+        id = 4,
+        name = "Acoustic Mornings",
+        songs = listOf("s4", "s5"),
+        description = "Musicas para acordar cedo"
     )
 )
 
 class PlaylistsViewModel : ViewModel() {
-    //  private var _playlists = mutableListOf<Playlist>()
-//  - mutableListOf vai fazer com que não altere o state da playlistsScreen
-    private var _playlists = mutableStateOf(emptyList<Playlist>())
-    val playlist: State<List<Playlist>> get() = _playlists
+    //  private var playlists = mutableListOf<Playlist>()
+    //  - mutableListOf não altera automaticamente o state da playlistsScreen
+    var playlists by mutableStateOf(emptyList<Playlist>())
+        private set
 
-    fun startLoadingPlaylists() {
+    // Função pra carregar as músicas
+    private fun loadPlaylists() {
         viewModelScope.launch {
-            loadPlaylists()
+            playlists = static_playlists
         }
     }
 
-    private suspend fun loadPlaylists() {
+    init {
+        loadPlaylists()
+    }
 
-        _playlists.value = static_playlists
+    fun addPlaylist(
+        name: String, description: String?, songs: List<String>,
+    ) {
+        try {
+            val nextId = (playlists.maxOfOrNull { it.id } ?: 0) + 1
 
+            val newPlaylist = Playlist(
+                id = nextId,
+                name = name,
+                description = description,
+                songs = songs,
+            )
+
+            playlists = playlists.plus(newPlaylist)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun getPlaylist(idPlaylist: Int): Playlist? {
+        return playlists.find { it.id == idPlaylist }
+    }
+
+    fun updatePlaylist(
+        playlistId: Int, newName: String?,
+        newDescription: String?,
+        newSongs: List<String>?,
+    ) {
+        try {
+            val updatedPlaylist = playlists.map { playlist ->
+                if (playlist.id == playlistId) {
+                    playlist.copy(
+                        name = newName ?: playlist.name,
+                        description = newDescription ?: playlist.description,
+                        songs = newSongs ?: playlist.songs,
+                    )
+                } else {
+                    playlist
+                }
+            }
+
+            playlists = updatedPlaylist
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+    }
+
+    fun deletePlaylist(playlistId: Int) {
+        try {
+            playlists = playlists.filter { it.id != playlistId }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

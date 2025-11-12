@@ -51,7 +51,7 @@ fun OnlineSearchScreen(songViewModel: SongViewModel) {
 
         // Exibir os resultados da busca online
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(searchResults) { song ->
+            items(searchResults, key = {"${it.title}-${it.artist}"}) { song ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

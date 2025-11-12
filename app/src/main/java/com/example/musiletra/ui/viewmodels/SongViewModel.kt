@@ -114,16 +114,22 @@ class SongViewModel : ViewModel() {
     // --- Online Search ---
 
     fun searchOnline(query: String) {
-//        viewModelScope.launch {
-//            try {
-//                val response = RetrofitClient.apiService.findByLyrics(query)
-//                if (response.status == "success") {
-//                    onlineSearchResults = response.result ?: emptyList()
-//                }
-//            } catch (e: Exception) {
-//                // Handle network errors, maybe show a toast or a message
-//                onlineSearchResults = emptyList()
-//            }
-//        }
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.findByLyrics(query)
+                if (response.status == "success") {
+                    onlineSearchResults = response.result ?: emptyList()
+                } else {
+                    // Imprime a mensagem de erro detalhada da API
+                    val errorMessage = response.error?.message ?: "Unknown error"
+                    val errorCode = response.error?.code ?: "N/A"
+                    println("AudD API Error ($errorCode): $errorMessage")
+                }
+            } catch (e: Exception) {
+                // Print the full exception to Logcat for debugging
+                e.printStackTrace()
+                onlineSearchResults = emptyList()
+            }
+        }
     }
 }

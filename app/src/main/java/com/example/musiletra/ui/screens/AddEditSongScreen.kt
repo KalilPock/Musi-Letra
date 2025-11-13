@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,14 +31,20 @@ import com.example.musiletra.ui.viewmodels.SongViewModel
 fun AddEditSongScreen(
     songViewModel: SongViewModel,
     existingSongId: Int? = null,
-    onSave: () -> Unit, // Alterado para não precisar passar os parâmetros
+    onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
-    val existingSong = existingSongId?.let { id -> songViewModel.songs.find { it.id == id } }
+    // 1. Coleta o estado para obter a lista de músicas
+    val songs by songViewModel.songs.collectAsState()
+
+    // 2. Encontra a música na lista coletada
+    val existingSong = existingSongId?.let { id ->
+        songs.find { it.id == id }
     }
 
-    var title by remember { mutableStateOf(existingSong?.title ?: "") }
-    var artist by remember { mutableStateOf(existingSong?.artist ?: "") }
+    // 3. Usa os nomes corretos da sua classe MusicaSalva
+    var title by remember { mutableStateOf(existingSong?.titulo ?: "") }
+    var artist by remember { mutableStateOf(existingSong?.artista ?: "") }
     var lyrics by remember { mutableStateOf(existingSong?.letra ?: "") }
 
     Column(

@@ -4,11 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.musiletra.data.database.UsuarioDao
-import com.example.musiletra.data.database.MusicaDao
 
-
-@Database(entities = [Usuario::class, MusicaSalva::class], version = 1)
+@Database(entities = [Usuario::class, MusicaSalva::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
@@ -24,7 +21,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "musiletra_database"
-                ).build()
+                )
+                // Em um app real, você implementaria uma estratégia de migração.
+                // Por enquanto, destruir e recriar o banco é o suficiente.
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

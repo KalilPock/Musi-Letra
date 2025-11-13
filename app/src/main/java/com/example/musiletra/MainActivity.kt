@@ -134,9 +134,7 @@ class MainActivity : ComponentActivity() {
                                     onEditSong = { songId -> navController.navigate("edit_song/$songId") },
                                     
                                     // --- MUDANÇA 4: Corrigir o onDelete ---
-                                    // Assumindo que sua PlaylistDetailsScreen foi atualizada
-                                    // para passar o objeto MusicaSalva inteiro.
-                                    onDeleteSong = { musica ->
+                                    onDeleteSong = { musica: MusicaSalva -> // CORRIGIDO
                                         songViewModel.deleteSong(musica)
                                     }
                                 )
@@ -146,7 +144,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(
                             route = "playlists/info/{playlistId}",
-                            // ... (sem alteração aqui)
+                             arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
                         ) { 
                             // ...
                         }
@@ -154,7 +152,7 @@ class MainActivity : ComponentActivity() {
                         // --- MUDANÇA 5: Corrigir tipo do songId (String -> Int) ---
                         composable(
                             route = "song/{songId}",
-                            arguments = listOf(navArgument("songId") { Route = NavType.IntType }) // MUDADO
+                            arguments = listOf(navArgument("songId") { type = NavType.IntType }) // CORRIGIDO
                         ) { backStackEntry ->
                             // getInt() em vez de getString()
                             val songId = backStackEntry.arguments?.getInt("songId") // MUDADO

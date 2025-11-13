@@ -20,15 +20,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp // Adicionado para resolver a referência
 import com.example.musiletra.ui.viewmodels.SongViewModel
+import com.example.musiletra.data.AudDSong
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnlineSearchScreen(songViewModel: SongViewModel) {
     var query by remember { mutableStateOf("") }
     // Usar os resultados da busca online, não a lista de músicas locais
-    val searchResults = songViewModel.onlineSearchResults
+    val searchResults: List<AudDSong> = songViewModel.onlineSearchResults
 
     Column(
         Modifier
@@ -52,7 +55,7 @@ fun OnlineSearchScreen(songViewModel: SongViewModel) {
         // Exibir os resultados da busca online
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(searchResults, key = {"${it.title}-${it.artist}"}) { song ->
-                Card(
+            Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)

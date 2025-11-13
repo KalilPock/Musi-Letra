@@ -29,17 +29,16 @@ import com.example.musiletra.ui.viewmodels.SongViewModel
 @Composable
 fun AddEditSongScreen(
     songViewModel: SongViewModel,
-    existingSongId: String? = null,
+    existingSongId: Int? = null,
     onSave: () -> Unit, // Alterado para não precisar passar os parâmetros
     onCancel: () -> Unit
 ) {
-    val existingSong = existingSongId?.let { id ->
-        songViewModel.songs.find { it.id == id }
+    val existingSong = existingSongId?.let { id -> songViewModel.songs.find { it.id == id } }
     }
 
     var title by remember { mutableStateOf(existingSong?.title ?: "") }
     var artist by remember { mutableStateOf(existingSong?.artist ?: "") }
-    var lyrics by remember { mutableStateOf(existingSong?.lyrics ?: "") }
+    var lyrics by remember { mutableStateOf(existingSong?.letra ?: "") }
 
     Column(
         Modifier

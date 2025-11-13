@@ -58,7 +58,7 @@ fun SongListScreen() {
 }
 
 @Composable
-fun SongItem(song: Song, onOpen: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun SongItem(song: MusicaSalva, onOpen: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -90,7 +90,7 @@ fun SongItem(song: Song, onOpen: () -> Unit, onEdit: () -> Unit, onDelete: () ->
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(song.lyrics, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(song.letra, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

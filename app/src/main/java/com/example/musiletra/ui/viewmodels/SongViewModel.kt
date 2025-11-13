@@ -1,118 +1,110 @@
 package com.example.musiletra.ui.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.musiletra.data.AudDSong
 import com.example.musiletra.data.RetrofitClient
-import com.example.musiletra.model.Song
+import com.example.musiletra.data.database.MusicaDao
+import com.example.musiletra.data.database.MusicaSalva
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.UUID
 
-val static_songs = listOf(
-    // Rock Classics
-    Song(
-        id = "s1",
-        title = "Bohemian Rhapsody",
-        artist = "Queen",
-        lyrics = "Is this the real life? Is this just fantasy?..."
-    ), Song(
-        id = "s2",
-        title = "Stairway to Heaven",
-        artist = "Led Zeppelin",
-        lyrics = "There's a lady who's sure all that glitters is gold..."
-    ),
-    // Lofi Beats
-    Song(
-        id = "s3", title = "Affection", artist = "Jinsang", lyrics = "[Instrumental]"
-    ),
-    // Acoustic Mornings
-    Song(
-        id = "s4",
-        title = "Fast Car",
-        artist = "Tracy Chapman",
-        lyrics = "You got a fast car, I want a ticket to anywhere..."
-    ), Song(
-        id = "s5",
-        title = "Wonderwall",
-        artist = "Oasis",
-        lyrics = "Today is gonna be the day that they're gonna throw it back to you..."
+// REMOVEMOS A LISTA 'static_songs' DAQUI
+// ELA NÃO É MAIS NECESSÁRIA
+
+// --- MUDANÇA 1: O ViewModel agora RECEBE o DAO no construtor ---
+// Isso se chama "Injeção de Dependência".
+class SongViewModel(private val musicaDao: MusicaDao) : ViewModel() {
+
+    // --- MUDANÇA 2: State para o ID do usuário ---
+    // Precisamos saber quem está logado.
+    // 'null' significa que é um "convidado" (pulou o login)
+    private val _currentUserId = MutableStateFlow<Int?>(null)
+
+    // --- MUDANÇA 3: O 'songs' agora é um 'Flow' que reage ao usuário ---
+    // Ele busca automaticamente as músicas do usuário logado (ou do convidado)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val songs: StateFlow<List<MusicaSalva>> = _currentUserId.flatMapLatest { userId ->
+        // Usamos a consulta do DAO que já trata 'userId' nulo ou não
+        musicaDao.getPlaylistDoUsuario(userId)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000), // Mantém o flow ativo por 5s
+        initialValue = emptyList() // Começa com uma lista vazia
     )
-)
 
-class SongViewModel : ViewModel() {
-    // State for the user's locally saved songs
-    var songs by mutableStateOf(emptyList<Song>())
-        private set
-
-    // State for the online search results
+    // State for the online search results (Isso não muda)
     var onlineSearchResults by mutableStateOf<List<AudDSong>>(emptyList())
         private set
 
-    init {
-        loadSongs()
+    // --- MUDANÇA 4: Função para a Activity/UI definir o usuário ---
+    /**
+     * Chamado pela UI (ex: MainActivity) após o login ou "Pular".
+     * @param usuarioId O ID do usuário logado, ou 'null' se for convidado.
+     */
+    fun setUsuario(usuarioId: Int?) {
+        _currentUserId.value = usuarioId
     }
 
-    private fun loadSongs() {
-        // Load the locally saved songs
-        viewModelScope.launch {
-            songs = static_songs
-            // SongRepository.songs.collect { songs = it }
-        }
 
-    }
+    // --- MUDANÇA 5: CRUD agora usa o DAO e 'MusicaSalva' ---
 
-    // --- Local Song Management ---
-
+    /**
+     * Adiciona uma música (da tela de busca ou manual) AO BANCO DE DADOS.
+     */
     fun addSong(title: String, artist: String, lyrics: String) {
-        val nextId = UUID.randomUUID().toString()
-
-        val newSong = Song(
-            id = nextId,
-            title = title,
-            artist = artist,
-            lyrics = lyrics,
-        )
-
-        songs = songs.plus(newSong)
-//        SongRepository.add(Song(title = title, artist = artist, lyrics = lyrics))
-        // Optional: navigate back to the main list after adding
-    }
-
-    fun editSong(songId: String, title: String, artist: String, lyrics: String) {
-
-        val updatedSongs = songs.map { song ->
-            if (song.id == songId) {
-                song.copy(
-                    title = title,
-                    artist = artist,
-                    lyrics = lyrics,
-                )
-
-            } else {
-                song
-            }
-        }
-
-        songs = updatedSongs
-
-//        val updated = SongRepository.get(id)?.copy(title = title, artist = artist, lyrics = lyrics)
-//        if (updated != null) SongRepository.update(updated)
-    }
-
-    fun deleteSong(songId: String) {
-        try {
-            songs = songs.filter { it.id != songId }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
+        viewModelScope.launch {
+            val novaMusica = MusicaSalva(
+                // O 'id' é gerado automaticamente pelo Room
+                usuarioId = _currentUserId.value, // Associa ao usuário logado!
+                titulo = title,
+                artista = artist,
+                letra = lyrics,
+                apiSongId = null // Você pode salvar o ID da API aqui se tiver
+            )
+            // Salva no banco
+            musicaDao.salvarMusica(novaMusica)
         }
     }
 
-    // --- Online Search ---
+    /**
+     * Edita uma música existente NO BANCO DE DADOS.
+     * Nota: O 'songId' agora é um Int (do Room), não mais uma String (do UUID).
+     */
+    fun editSong(songId: Int, title: String, artist: String, lyrics: String) {
+        viewModelScope.launch {
+            val musicaAtualizada = MusicaSalva(
+                id = songId, // ID da música que estamos editando
+                usuarioId = _currentUserId.value, // Mantém a associação
+                titulo = title,
+                artista = artist,
+                letra = lyrics,
+                apiSongId = null
+            )
+            // Atualiza no banco
+            musicaDao.atualizarMusica(musicaAtualizada)
+        }
+    }
 
+    /**
+     * Deleta uma música DO BANCO DE DADOS.
+     * É mais fácil e seguro passar o objeto inteiro para deletar.
+     */
+    fun deleteSong(musica: MusicaSalva) {
+        viewModelScope.launch {
+            // Deleta do banco
+            musicaDao.removerMusica(musica)
+        }
+    }
+
+    // --- A Busca Online continua igual ---
+    // (Ela não depende do banco de dados local)
     fun searchOnline(query: String) {
         viewModelScope.launch {
             try {
@@ -120,16 +112,33 @@ class SongViewModel : ViewModel() {
                 if (response.status == "success") {
                     onlineSearchResults = response.result ?: emptyList()
                 } else {
-                    // Imprime a mensagem de erro detalhada da API
                     val errorMessage = response.error?.message ?: "Unknown error"
                     val errorCode = response.error?.code ?: "N/A"
                     println("AudD API Error ($errorCode): $errorMessage")
                 }
             } catch (e: Exception) {
-                // Print the full exception to Logcat for debugging
                 e.printStackTrace()
                 onlineSearchResults = emptyList()
             }
         }
+    }
+}
+
+
+// --- MUDANÇA 6: Factory para criar o ViewModel ---
+/**
+ * Como o SongViewModel agora precisa de um 'MusicaDao' no construtor,
+ * não podemos mais usá-lo com 'viewModel()' diretamente.
+ * Precisamos desta "Fábrica" para dizer ao Android como criá-lo.
+ */
+class SongViewModelFactory(
+    private val musicaDao: MusicaDao
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SongViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SongViewModel(musicaDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

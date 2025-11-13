@@ -18,9 +18,9 @@ import androidx.room.PrimaryKey
 data class MusicaSalva(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-
+    
     // Chave estrangeira: null se for "convidado" (usuário pulou o login)
-    val usuarioId: Int?,
+    val usuarioId: Int?, 
 
     // Dados da música
     val titulo: String,

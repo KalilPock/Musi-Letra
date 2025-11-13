@@ -24,9 +24,9 @@ fun PlaylistDetailsScreen(
     playlistsViewModel: PlaylistsViewModel,
     songViewModel: SongViewModel,
     modifier: Modifier = Modifier,
-    onOpenSong: (String) -> Unit,
-    onEditSong: (String) -> Unit,
-    onDeleteSong: (String) -> Unit
+    onOpenSong: (Int) -> Unit,
+    onEditSong: (Int) -> Unit,
+    onDeleteSong: (MusicaSalva) -> Unit
 ) {
     val playlist = playlistsViewModel.playlists.find { it.id == playlistId }
 

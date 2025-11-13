@@ -29,8 +29,7 @@ import androidx.navigation.navArgument
 import com.example.musiletra.data.database.AppDatabase // Importe o Banco
 import com.example.musiletra.data.database.MusicaSalva
 import androidx.activity.viewModels
-// Importe sua nova tela de Login (você precisará criar este arquivo)
-// import com.example.musiletra.ui.screens.LoginScreen
+import com.example.musiletra.ui.screens.LoginScreen
 import com.example.musiletra.ui.screens.AddEditSongScreen
 import com.example.musiletra.ui.screens.OnlineSearchScreen
 import com.example.musiletra.ui.screens.PlaylistDetailsScreen
@@ -39,6 +38,8 @@ import com.example.musiletra.ui.screens.PlaylistsScreen
 import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
 import com.example.musiletra.ui.viewmodels.SongViewModel
 import com.example.musiletra.ui.viewmodels.SongViewModelFactory
+import com.example.musiletra.ui.viewmodels.UsuarioViewModel
+import com.example.musiletra.ui.viewmodels.UsuarioViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -56,7 +57,9 @@ class MainActivity : ComponentActivity() {
     
     // 4. Crie o PlaylistsViewModel (ele não precisa de factory)
     private val playlistsViewModel: PlaylistsViewModel by viewModels()
-    // --- Fim da Mudança 1 ---
+
+    private val usuarioViewModelFactory by lazy { UsuarioViewModelFactory(database.usuarioDao()) }
+    private val usuarioViewModel: UsuarioViewModel by viewModels { usuarioViewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,31 +88,21 @@ class MainActivity : ComponentActivity() {
 
                         // --- MUDANÇA 3: Adicionar a nova rota de Login ---
                         composable("login") {
-                            /* // Descomente isso quando criar sua LoginScreen
-                            
                             LoginScreen(
-                                navController = navController,
-                                // (Você precisará do UsuarioDao, talvez em um UsuarioViewModel)
-                                onLoginSuccess = { usuario ->
-                                    // Seta o usuário no ViewModel!
-                                    songViewModel.setUsuario(usuario.id) 
-                                    // Navega para as playlists
+                                usuarioViewModel = usuarioViewModel,
+                                onLoginSuccess = { userId ->
+                                    songViewModel.setUsuario(userId)
                                     navController.navigate("playlists") {
-                                        popUpTo("login") { inclusive = true } // Limpa a pilha de login
+                                        popUpTo("login") { inclusive = true }
                                     }
                                 },
                                 onSkip = {
-                                    // Seta o usuário como "convidado" (null)
-                                    songViewModel.setUsuario(null) 
-                                    // Navega para as playlists
+                                    songViewModel.setUsuario(null) // Modo Convidado
                                     navController.navigate("playlists") {
-                                        popUpTo("login") { inclusive = true } // Limpa a pilha de login
+                                        popUpTo("login") { inclusive = true }
                                     }
                                 }
                             )
-                            */
-                            // Placeholder_Login: Remova isso depois
-                            Text("Placeholder: Crie sua LoginScreen.kt aqui.")
                         }
                         
                         // --- Fim da Mudança 3 ---

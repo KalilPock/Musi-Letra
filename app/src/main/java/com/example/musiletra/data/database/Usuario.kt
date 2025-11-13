@@ -13,5 +13,5 @@ data class Usuario(
     val id: Int = 0,
     val nome: String,
     val email: String,
-    val senha: String // Lembre-se de criptografar a senha em um app real!
+    val senhaHash: String // Lembre-se de criptografar a senha em um app real!
 )

@@ -5,8 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musiletra.data.AudDSong
 import com.example.musiletra.data.RetrofitClient
+import com.example.musiletra.model.AudDSong
 import com.example.musiletra.model.Song
 import kotlinx.coroutines.launch
 import java.util.UUID

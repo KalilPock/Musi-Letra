@@ -34,6 +34,17 @@ import com.example.musiletra.ui.screens.PlaylistsScreen
 import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
 import com.example.musiletra.ui.viewmodels.SongViewModel
 
+// Enum para gerenciar as rotas de forma segura
+enum class Routes(val route: String) {
+    PLAYLISTS("playlists"),
+    PLAYLIST_DETAILS("playlists/{playlistId}"),
+    PLAYLIST_INFO("playlists/info/{playlistId}"),
+    SONG_DETAILS("song/{songId}"),
+    EDIT_SONG("edit_song/{songId}"),
+    ADD_SONG("add_song"),
+    ONLINE_SEARCH("online_search")
+}
+
 val playlistsViewModel = PlaylistsViewModel()
 val songViewModel = SongViewModel()
 
@@ -58,16 +69,16 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "playlists",
+                        startDestination = Routes.PLAYLISTS.route,
                         modifier = Modifier.padding(innerPadding),
                     ) {
-                        composable("playlists") {
+                        composable(Routes.PLAYLISTS.route) {
                             PlaylistsScreen(
                                 navController = navController, viewModel = playlistsViewModel
                             )
                         }
                         composable(
-                            route = "playlists/{playlistId}",
+                            route = Routes.PLAYLIST_DETAILS.route,
                             arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
                         ) { navBackStackEntry ->
                             val playlistId = navBackStackEntry.arguments?.getInt("playlistId")
@@ -76,8 +87,16 @@ class MainActivity : ComponentActivity() {
                                     playlistsViewModel = playlistsViewModel,
                                     songViewModel = songViewModel,
                                     playlistId = playlistId,
-                                    onOpenSong = { songId -> navController.navigate("song/$songId") },
-                                    onEditSong = { songId -> navController.navigate("edit_song/$songId") },
+                                    onOpenSong = { songId ->
+                                        navController.navigate(
+                                            Routes.SONG_DETAILS.route.replace("{songId}", songId)
+                                        )
+                                    },
+                                    onEditSong = { songId ->
+                                        navController.navigate(
+                                            Routes.EDIT_SONG.route.replace("{songId}", songId)
+                                        )
+                                    },
                                     onDeleteSong = { songId -> songViewModel.deleteSong(songId) }
                                 )
                             } else {
@@ -85,7 +104,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable(
-                            route = "playlists/info/{playlistId}",
+                            route = Routes.PLAYLIST_INFO.route,
                             arguments = listOf(navArgument("playlistId") {
                                 type = NavType.IntType
                             })
@@ -102,7 +121,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable(
-                            route = "song/{songId}",
+                            route = Routes.SONG_DETAILS.route,
                             arguments = listOf(navArgument("songId") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val songId = backStackEntry.arguments?.getString("songId")
@@ -114,7 +133,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(
-                            route = "edit_song/{songId}",
+                            route = Routes.EDIT_SONG.route,
                             arguments = listOf(navArgument("songId") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val songId = backStackEntry.arguments?.getString("songId")
@@ -125,14 +144,14 @@ class MainActivity : ComponentActivity() {
                                 onCancel = { navController.popBackStack() }
                             )
                         }
-                        composable("add_song") {
+                        composable(Routes.ADD_SONG.route) {
                             AddEditSongScreen(
                                 songViewModel = songViewModel,
                                 onSave = { navController.popBackStack() },
                                 onCancel = { navController.popBackStack() }
                             )
                         }
-                        composable("online_search") {
+                        composable(Routes.ONLINE_SEARCH.route) {
                             OnlineSearchScreen(songViewModel = songViewModel)
                         }
                     }
@@ -154,13 +173,13 @@ fun MusiLetraTopAppBar(
     TopAppBar(
         title = {
             val title = when (currentRoute) {
-                "playlists" -> "Minhas Playlists"
-                "playlists/{playlistId}" -> "Detalhes da Playlist"
-                "playlists/info/{playlistId}" -> "Informações da Playlist"
-                "song/{songId}" -> "Detalhes da Música"
-                "edit_song/{songId}" -> "Editar Música"
-                "add_song" -> "Adicionar Música"
-                "online_search" -> "Buscar Online"
+                Routes.PLAYLISTS.route -> "Minhas Playlists"
+                Routes.PLAYLIST_DETAILS.route -> "Detalhes da Playlist"
+                Routes.PLAYLIST_INFO.route -> "Informações da Playlist"
+                Routes.SONG_DETAILS.route -> "Detalhes da Música"
+                Routes.EDIT_SONG.route -> "Editar Música"
+                Routes.ADD_SONG.route -> "Adicionar Música"
+                Routes.ONLINE_SEARCH.route -> "Buscar Online"
                 else -> "Musiletra"
             }
             Text(title)
@@ -176,11 +195,11 @@ fun MusiLetraTopAppBar(
             }
         },
         actions = {
-            if (currentRoute == "playlists") {
-                IconButton(onClick = { navController.navigate("add_song") }) {
+            if (currentRoute == Routes.PLAYLISTS.route) {
+                IconButton(onClick = { navController.navigate(Routes.ADD_SONG.route) }) {
                     Icon(Icons.Default.Add, contentDescription = "Adicionar música")
                 }
-                IconButton(onClick = { navController.navigate("online_search") }) {
+                IconButton(onClick = { navController.navigate(Routes.ONLINE_SEARCH.route) }) {
                     Icon(Icons.Default.Search, contentDescription = "Pesquisar online")
                 }
             }

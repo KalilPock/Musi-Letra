@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.musiletra.Routes
 import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
 
 @Composable
@@ -88,7 +89,11 @@ fun PlaylistInfoScreen(
 
                 // Linha de botões
                 PlaylistActionButtons(
-                    onNavigateBack = { navController.navigate("playlists/${playlist.id}") },
+                    onNavigateBack = { 
+                        navController.navigate(
+                            Routes.PLAYLIST_DETAILS.route.replace("{playlistId}", playlist.id.toString())
+                        )
+                     },
                     onShare = { /* TODO: Handle share */ },
                     onDelete = {
                         viewModel.deletePlaylist(playlist.id)

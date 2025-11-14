@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.musiletra.R
+import com.example.musiletra.Routes
 import com.example.musiletra.model.Playlist
 import com.example.musiletra.ui.viewmodels.PlaylistsViewModel
 
@@ -44,9 +45,13 @@ fun PlaylistsScreen(
     ) {
         items(playlists, key = { it.id }) { playlist -> // Adicionar a key melhora a performance
             PlaylistItem(playlist = playlist, onClick = {
-                navController.navigate("playlists/${playlist.id}")
+                navController.navigate(
+                    Routes.PLAYLIST_DETAILS.route.replace("{playlistId}", playlist.id.toString())
+                )
             }, onInfo = {
-                navController.navigate("playlists/info/${playlist.id}")
+                navController.navigate(
+                    Routes.PLAYLIST_INFO.route.replace("{playlistId}", playlist.id.toString())
+                )
             }, onShare = {
                 // TODO: Handle share
             })

@@ -11,7 +11,9 @@ import com.example.musiletra.data.SongRepository
 import com.example.musiletra.model.Song
 import kotlinx.coroutines.launch
 
-class SongViewModel : ViewModel() {
+class SongViewModel(
+    private val repository: SongRepository
+) : ViewModel() {
     // State for the user's locally saved songs
     var songs by mutableStateOf<List<Song>>(emptyList())
         private set
@@ -21,25 +23,48 @@ class SongViewModel : ViewModel() {
         private set
 
     init {
-        // Load the locally saved songs
+        // Load the locally saved songs from Room database
         viewModelScope.launch {
-            SongRepository.songs.collect { songs = it }
+            repository.songs.collect { songs = it }
         }
     }
 
-    // --- Local Song Management ---
+    // --- Local Song Management (CRUD) ---
 
+    // CREATE
     fun addSong(title: String, artist: String, lyrics: String) {
-        SongRepository.add(Song(title = title, artist = artist, lyrics = lyrics))
+        viewModelScope.launch {
+            repository.add(Song(title = title, artist = artist, lyrics = lyrics))
+        }
     }
 
+    fun addSong(song: Song) {
+        viewModelScope.launch {
+            repository.add(song)
+        }
+    }
+
+    // READ
+    suspend fun getSong(id: String): Song? {
+        return repository.get(id)
+    }
+
+    // UPDATE
     fun editSong(id: String, title: String, artist: String, lyrics: String) {
-        val updated = SongRepository.get(id)?.copy(title = title, artist = artist, lyrics = lyrics)
-        if (updated != null) SongRepository.update(updated)
+        viewModelScope.launch {
+            val existing = repository.get(id)
+            if (existing != null) {
+                val updated = existing.copy(title = title, artist = artist, lyrics = lyrics)
+                repository.update(updated)
+            }
+        }
     }
 
+    // DELETE
     fun deleteSong(id: String) {
-        SongRepository.delete(id)
+        viewModelScope.launch {
+            repository.delete(id)
+        }
     }
 
     // --- Online Search ---

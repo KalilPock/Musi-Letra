@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,13 +28,17 @@ fun SongListScreen(
     onOpen: (String) -> Unit,
     onEdit: (String) -> Unit,
     onDelete: (String) -> Unit,
-    onGoToSearch: () -> Unit
+    onGoToSearch: () -> Unit,
+    onGoToPlaylists: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Musiletras") },
                 actions = {
+                    IconButton(onClick = onGoToPlaylists) {
+                        Icon(Icons.Default.PlaylistPlay, contentDescription = "Playlists")
+                    }
                     IconButton(onClick = onGoToSearch) {
                         Icon(Icons.Default.Search, contentDescription = "Search Online")
                     }

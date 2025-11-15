@@ -1,25 +1,45 @@
 package com.example.musiletra.data
 
-
 import com.example.musiletra.model.Song
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 
-object SongRepository {
-    private val _songs = MutableStateFlow<List<Song>>(emptyList())
-    val songs: StateFlow<List<Song>> = _songs
+class SongRepository(private val songDao: SongDao) {
 
-    fun add(song: Song) {
-        _songs.value = _songs.value + song
+    // READ - Obter todas as músicas como Flow
+    val songs: Flow<List<Song>> = songDao.getAllSongs()
+
+    // CREATE - Adicionar música
+    suspend fun add(song: Song) {
+        songDao.insert(song)
     }
 
-    fun update(updated: Song) {
-        _songs.value = _songs.value.map { if (it.id == updated.id) updated else it }
+    // CREATE - Adicionar múltiplas músicas
+    suspend fun addAll(songs: List<Song>) {
+        songDao.insertAll(songs)
     }
 
-    fun delete(id: String) {
-        _songs.value = _songs.value.filterNot { it.id == id }
+    // READ - Buscar música por ID
+    suspend fun get(id: String): Song? {
+        return songDao.getSongById(id)
     }
 
-    fun get(id: String): Song? = _songs.value.firstOrNull { it.id == id }
+    // READ - Buscar músicas
+    fun search(query: String): Flow<List<Song>> {
+        return songDao.searchSongs(query)
+    }
+
+    // UPDATE - Atualizar música
+    suspend fun update(song: Song) {
+        songDao.update(song)
+    }
+
+    // DELETE - Deletar música
+    suspend fun delete(id: String) {
+        songDao.deleteById(id)
+    }
+
+    // DELETE - Deletar música por objeto
+    suspend fun delete(song: Song) {
+        songDao.delete(song)
+    }
 }

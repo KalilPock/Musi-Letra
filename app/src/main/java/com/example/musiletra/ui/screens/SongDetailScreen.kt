@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,7 +20,8 @@ fun SongDetailScreen(
     song: Song,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    onShare: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -31,6 +33,9 @@ fun SongDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onShare) {
+                        Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                    }
                     IconButton(onClick = onEdit) {
                         Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
                     }

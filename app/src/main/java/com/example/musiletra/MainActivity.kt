@@ -36,13 +36,10 @@ import com.example.musiletra.ui.viewmodels.SongViewModel
 
 // Enum para gerenciar as rotas de forma segura
 enum class Routes(val route: String) {
-    PLAYLISTS("playlists"),
-    PLAYLIST_DETAILS("playlists/{playlistId}"),
-    PLAYLIST_INFO("playlists/info/{playlistId}"),
-    SONG_DETAILS("song/{songId}"),
-    EDIT_SONG("edit_song/{songId}"),
-    ADD_SONG("add_song"),
-    ONLINE_SEARCH("online_search")
+    PLAYLISTS("playlists"), PLAYLIST_DETAILS("playlists/{playlistId}"), PLAYLIST_INFO("playlists/info/{playlistId}"), SONG_DETAILS(
+        "song/{songId}"
+    ),
+    EDIT_SONG("edit_song/{songId}"), ADD_SONG("add_song"), ONLINE_SEARCH("online_search")
 }
 
 val playlistsViewModel = PlaylistsViewModel()
@@ -97,8 +94,7 @@ class MainActivity : ComponentActivity() {
                                             Routes.EDIT_SONG.route.replace("{songId}", songId)
                                         )
                                     },
-                                    onDeleteSong = { songId -> songViewModel.deleteSong(songId) }
-                                )
+                                    onDeleteSong = { songId -> songViewModel.deleteSong(songId) })
                             } else {
                                 Text("Error: Playlist ID not found.")
                             }
@@ -129,8 +125,7 @@ class MainActivity : ComponentActivity() {
                                 songViewModel = songViewModel,
                                 existingSongId = songId,
                                 onSave = { navController.popBackStack() },
-                                onCancel = { navController.popBackStack() }
-                            )
+                                onCancel = { navController.popBackStack() })
                         }
                         composable(
                             route = Routes.EDIT_SONG.route,
@@ -141,15 +136,13 @@ class MainActivity : ComponentActivity() {
                                 songViewModel = songViewModel,
                                 existingSongId = songId,
                                 onSave = { navController.popBackStack() },
-                                onCancel = { navController.popBackStack() }
-                            )
+                                onCancel = { navController.popBackStack() })
                         }
                         composable(Routes.ADD_SONG.route) {
                             AddEditSongScreen(
                                 songViewModel = songViewModel,
                                 onSave = { navController.popBackStack() },
-                                onCancel = { navController.popBackStack() }
-                            )
+                                onCancel = { navController.popBackStack() })
                         }
                         composable(Routes.ONLINE_SEARCH.route) {
                             OnlineSearchScreen(songViewModel = songViewModel)
@@ -189,15 +182,18 @@ fun MusiLetraTopAppBar(
             if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar"
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Voltar"
                     )
                 }
             }
         },
         actions = {
             if (currentRoute == Routes.PLAYLISTS.route) {
-                IconButton(onClick = { navController.navigate(Routes.ADD_SONG.route) }) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar música")
+                IconButton(onClick = { // TODO: Navegar para a tela de adicionar playlist
+
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "Adicionar playlist")
                 }
                 IconButton(onClick = { navController.navigate(Routes.ONLINE_SEARCH.route) }) {
                     Icon(Icons.Default.Search, contentDescription = "Pesquisar online")

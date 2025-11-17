@@ -11,11 +11,13 @@ import androidx.compose.ui.Modifier
 import com.example.musiletra.ui.AppRoot
 import com.example.musiletra.ui.PlaylistViewModel
 import com.example.musiletra.ui.SongViewModel
+import com.example.musiletra.ui.UsuarioViewModel
 import com.example.musiletra.ui.theme.MusiLetraTheme
 
 class MainActivity : ComponentActivity() {
     private val songViewModel: SongViewModel by viewModels()
     private val playlistViewModel: PlaylistViewModel by viewModels()
+    private val usuarioViewModel: UsuarioViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +29,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     AppRoot(
                         songViewModel = songViewModel,
-                        playlistViewModel = playlistViewModel
+                        playlistViewModel = playlistViewModel,
+                        usuarioViewModel = usuarioViewModel
                     )
                 }
             }

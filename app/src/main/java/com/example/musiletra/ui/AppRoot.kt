@@ -12,13 +12,33 @@ import com.example.musiletra.ui.screens.*
 @Composable
 fun AppRoot(
     songViewModel: SongViewModel,
-    playlistViewModel: PlaylistViewModel
+    playlistViewModel: PlaylistViewModel,
+    usuarioViewModel: UsuarioViewModel
 ) {
     val navController = rememberNavController()
     val songs by songViewModel.songs.collectAsStateWithLifecycle()
     val playlists by playlistViewModel.playlists.collectAsStateWithLifecycle()
 
-    NavHost(navController = navController, startDestination = "songList") {
+    // Determina tela inicial baseado no estado de login
+    val startDestination = if (usuarioViewModel.usuarioLogado == null) "login" else "songList"
+
+    NavHost(navController = navController, startDestination = startDestination) {
+        // === LOGIN ROUTE ===
+        composable("login") {
+            LoginScreen(
+                usuarioViewModel = usuarioViewModel,
+                onLoginSuccess = {
+                    navController.navigate("songList") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onSkip = {
+                    navController.navigate("songList") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
         // === SONGS ROUTES ===
         composable("songList") {
             SongListScreen(

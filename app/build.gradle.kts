@@ -18,7 +18,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "AUDD_API_KEY", "\"c7d9746438cba192a4dd01481b2d59ba\"")
+        buildConfigField("String", "AUDD_API_KEY", "\"9d1d6ab2c1d52210695b2aa7145227d1\"")
     }
 
     buildTypes {

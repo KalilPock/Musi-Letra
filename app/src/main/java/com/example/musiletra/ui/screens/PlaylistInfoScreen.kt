@@ -4,14 +4,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.musiletra.model.PlaylistWithSongs
 import com.example.musiletra.ui.viewmodels.PlaylistViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,14 +22,14 @@ fun PlaylistInfoScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var playlist by remember { mutableStateOf<com.example.musiletra.model.Playlist?>(null) }
+    var playlistWithSongs by remember { mutableStateOf<PlaylistWithSongs?>(null) }
 
     LaunchedEffect(playlistId) {
-        playlist = playlistViewModel.getPlaylist(playlistId)
+        playlistWithSongs = playlistViewModel.getPlaylistWithSongs(playlistId)
     }
 
-    val currentPlaylist = playlist
+    val currentPlaylist = playlistWithSongs?.playlist
+    val songs = playlistWithSongs?.songs ?: emptyList()
 
     Scaffold(
         topBar = {
@@ -36,7 +37,7 @@ fun PlaylistInfoScreen(
                 title = { Text("Informações da Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                        Icon(Icons.Default.ArrowBack, "Voltar")
                     }
                 },
                 actions = {
@@ -52,7 +53,7 @@ fun PlaylistInfoScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -76,7 +77,7 @@ fun PlaylistInfoScreen(
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = currentPlaylist.name.take(2).uppercase(),
@@ -108,7 +109,7 @@ fun PlaylistInfoScreen(
                 }
 
                 // Playlist Description
-                if (!currentPlaylist.description.isNullOrBlank()) {
+                if (currentPlaylist.description.isNotBlank()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             text = "Descrição",
@@ -122,7 +123,7 @@ fun PlaylistInfoScreen(
                             )
                         ) {
                             Text(
-                                text = currentPlaylist.description!!,
+                                text = currentPlaylist.description,
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.padding(16.dp)
                             )
@@ -152,7 +153,7 @@ fun PlaylistInfoScreen(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "${currentPlaylist.songs.size}",
+                                    text = "${songs.size}",
                                     style = MaterialTheme.typography.headlineMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )

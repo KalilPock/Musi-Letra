@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -18,17 +17,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.musiletra.model.Playlist
+import com.example.musiletra.ui.viewmodels.PlaylistViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistListScreen(
-    playlists: List<Playlist>,
-    onCreatePlaylist: (name: String, description: String) -> Unit,
+    playlistViewModel: PlaylistViewModel,
     onOpenPlaylist: (Int) -> Unit,
-    onPlaylistInfo: (Int) -> Unit,
-    onDeletePlaylist: (Int) -> Unit,
     onBack: () -> Unit
 ) {
+    val playlists by playlistViewModel.playlists.collectAsState()
     var showDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -37,7 +37,7 @@ fun PlaylistListScreen(
                 title = { Text("Playlists") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                        Icon(Icons.Default.ArrowBack, "Voltar")
                     }
                 }
             )
@@ -67,8 +67,7 @@ fun PlaylistListScreen(
                     PlaylistItem(
                         playlist = playlist,
                         onOpen = { onOpenPlaylist(playlist.id) },
-                        onInfo = { onPlaylistInfo(playlist.id) },
-                        onDelete = { onDeletePlaylist(playlist.id) }
+                        onDelete = { playlistViewModel.deletePlaylist(playlist) }
                     )
                 }
             }
@@ -78,7 +77,7 @@ fun PlaylistListScreen(
             CreatePlaylistDialog(
                 onDismiss = { showDialog = false },
                 onCreate = { name, description ->
-                    onCreatePlaylist(name, description)
+                    playlistViewModel.createPlaylist(name, description)
                     showDialog = false
                 }
             )
@@ -90,66 +89,43 @@ fun PlaylistListScreen(
 fun PlaylistItem(
     playlist: Playlist,
     onOpen: () -> Unit,
-    onInfo: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(8.dp)
             .clickable { onOpen() },
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = playlist.name,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                if (playlist.description.isNotBlank()) {
+                    Text(
+                        text = playlist.description,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = formatDate(playlist.createdAt),
+                    fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (!playlist.description.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = playlist.description!!,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "${playlist.songs.size} músicas",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(
-                    onClick = onInfo,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Icon(Icons.Default.Info, "Informações", modifier = Modifier.size(20.dp))
-                }
-                IconButton(
-                    onClick = onDelete,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Default.Delete, "Excluir", modifier = Modifier.size(20.dp))
-                }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, "Excluir")
             }
         }
     }
@@ -201,3 +177,7 @@ fun CreatePlaylistDialog(
     )
 }
 
+private fun formatDate(timestamp: Long): String {
+    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    return sdf.format(Date(timestamp))
+}

@@ -1,15 +1,18 @@
+gitignore
+# Arquivos gerados pelo Gradle
+.gradle/
+build/
+local.properties
+
+# Arquivos de configuração da IDE (Android Studio, IntelliJ)
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
+
+# Arquivos de sistema operacional
+.DS_Store# Outros arquivos gerados pelo Android Studio
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+
+# Arquivos de log e cache do Kotlin
+.kotlin/

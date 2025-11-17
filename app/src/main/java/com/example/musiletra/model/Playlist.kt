@@ -8,6 +8,6 @@ data class Playlist(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    var description: String? = null,
-    var songs: List<String> = emptyList()
+    val description: String,
+    val createdAt: Long = System.currentTimeMillis()
 )

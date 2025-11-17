@@ -6,14 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.musiletra.model.Playlist
+import com.example.musiletra.model.PlaylistSongCrossRef
 import com.example.musiletra.model.Song
 
 @Database(
     entities = [
         Song::class,
-        Playlist::class
+        Playlist::class,
+        PlaylistSongCrossRef::class
     ],
-    version = 2,
+    version = 2, // Keeping version 2 as it was in the most complete version
     exportSchema = false
 )
 @TypeConverters(Converters::class)

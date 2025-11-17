@@ -4,10 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.musiletra.model.Playlist
+import com.example.musiletra.model.PlaylistWithSongs
 import com.example.musiletra.model.Song
 import com.example.musiletra.ui.viewmodels.PlaylistViewModel
 import kotlinx.coroutines.launch
@@ -26,50 +25,39 @@ import kotlinx.coroutines.launch
 fun PlaylistDetailScreen(
     playlistId: Int,
     playlistViewModel: PlaylistViewModel,
-    onBack: () -> Unit,
-    onInfo: () -> Unit
+    onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    var playlist by remember { mutableStateOf<Playlist?>(null) }
-    var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    var playlistWithSongs by remember { mutableStateOf<PlaylistWithSongs?>(null) }
     var showAddSongDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(playlistId) {
-        playlist = playlistViewModel.getPlaylist(playlistId)
-        songs = playlistViewModel.getPlaylistSongs(playlistId)
+    // CORRECT: Collect the state from the StateFlow into a simple List.
+    val availableSongs by playlistViewModel.availableSongs.collectAsState()
+
+    // IMPROVED: This effect will now re-run if the underlying playlist data changes,
+    // keeping the detailed view perfectly in sync automatically.
+    LaunchedEffect(playlistId, playlistViewModel.playlists) {
+        playlistWithSongs = playlistViewModel.getPlaylistWithSongs(playlistId)
     }
 
-    // Update songs whenever playlists change
-    LaunchedEffect(playlistViewModel.playlistsWithSongs) {
-        songs = playlistViewModel.getPlaylistSongs(playlistId)
-    }
-
-    val currentPlaylist = playlist
+    val playlist = playlistWithSongs?.playlist
+    val songs = playlistWithSongs?.songs ?: emptyList()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(currentPlaylist?.name ?: "Playlist") },
+                title = { Text(playlist?.name ?: "Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onInfo) {
-                        Icon(Icons.Default.Info, "Informações")
+                        Icon(Icons.Default.ArrowBack, "Voltar")
                     }
                 }
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showAddSongDialog = true },
-                icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("Adicionar Música") },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            FloatingActionButton(onClick = { showAddSongDialog = true }) {
+                Icon(Icons.Default.Add, "Adicionar Música")
+            }
         }
     ) { padding ->
         Column(
@@ -77,23 +65,15 @@ fun PlaylistDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            currentPlaylist?.let {
-                if (!it.description.isNullOrBlank()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Text(
-                            text = it.description!!,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
+            playlist?.let {
+                if (it.description.isNotBlank()) {
+                    Text(
+                        text = it.description,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    HorizontalDivider()
                 }
             }
 
@@ -102,28 +82,10 @@ fun PlaylistDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            "Nenhuma música nesta playlist",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "Toque em + para adicionar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                    Text("Nenhuma música nesta playlist ainda.")
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(songs, key = { it.id }) { song ->
                         PlaylistSongItem(
                             song = song,
@@ -140,14 +102,14 @@ fun PlaylistDetailScreen(
 
         if (showAddSongDialog) {
             AddSongToPlaylistDialog(
-                availableSongs = playlistViewModel.availableSongs,
+                // CORRECT: Pass the collected list, not the StateFlow.
+                availableSongs = availableSongs,
                 currentSongIds = songs.map { it.id }.toSet(),
                 onDismiss = { showAddSongDialog = false },
                 onAddSong = { songId ->
                     scope.launch {
                         playlistViewModel.addSongToPlaylist(playlistId, songId)
                     }
-                    showAddSongDialog = false
                 }
             )
         }
@@ -160,51 +122,41 @@ fun PlaylistSongItem(
     onRemove: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = song.title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 if (song.artist.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = song.artist,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = song.lyrics,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    lineHeight = 18.sp
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(
-                onClick = onRemove,
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(Icons.Default.Delete, "Remover", modifier = Modifier.size(20.dp))
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Default.Delete, "Remover da playlist")
             }
         }
     }
@@ -221,33 +173,32 @@ fun AddSongToPlaylistDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Adicionar Música à Playlist") },
+        title = { Text("Adicionar Música") },
         text = {
             if (songsToAdd.isEmpty()) {
                 Text("Todas as músicas já estão nesta playlist.")
             } else {
-                LazyColumn(modifier = Modifier.height(300.dp)) {
+                LazyColumn {
                     items(songsToAdd, key = { it.id }) { song ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            onClick = { onAddSong(song.id) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer
-                            )
+                            onClick = {
+                                onAddSong(song.id)
+                                onDismiss()
+                            }
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = song.title,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    fontWeight = FontWeight.Bold
                                 )
                                 if (song.artist.isNotBlank()) {
                                     Text(
                                         text = song.artist,
                                         fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }

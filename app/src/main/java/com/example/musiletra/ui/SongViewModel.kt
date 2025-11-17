@@ -63,11 +63,21 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
     fun searchOnline(query: String) {
         viewModelScope.launch {
             try {
+                println("🔍 Buscando letras online para: $query")
                 val response = RetrofitClient.apiService.findByLyrics(query)
+                println("✅ Resposta da API - Status: ${response.status}")
+                println("✅ Número de resultados: ${response.result?.size ?: 0}")
+
                 if (response.status == "success") {
                     onlineSearchResults = response.result ?: emptyList()
+                    println("✅ Resultados atualizados: ${onlineSearchResults.size} músicas encontradas")
+                } else {
+                    println("⚠️ Status da API não é success: ${response.status}")
+                    onlineSearchResults = emptyList()
                 }
             } catch (e: Exception) {
+                println("❌ Erro ao buscar letras: ${e.message}")
+                e.printStackTrace()
                 onlineSearchResults = emptyList()
             }
         }

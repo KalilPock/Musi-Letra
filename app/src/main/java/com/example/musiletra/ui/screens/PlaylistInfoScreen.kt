@@ -8,10 +8,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.musiletra.model.Playlist
 import com.example.musiletra.ui.viewmodels.PlaylistViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,8 +22,7 @@ fun PlaylistInfoScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var playlist by remember { mutableStateOf<com.example.musiletra.model.Playlist?>(null) }
+    var playlist by remember { mutableStateOf<Playlist?>(null) }
 
     LaunchedEffect(playlistId) {
         playlist = playlistViewModel.getPlaylist(playlistId)
@@ -52,7 +52,7 @@ fun PlaylistInfoScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -76,7 +76,7 @@ fun PlaylistInfoScreen(
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = currentPlaylist.name.take(2).uppercase(),

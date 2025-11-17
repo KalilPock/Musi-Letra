@@ -27,15 +27,11 @@ fun PlaylistDetailScreen(
     playlistViewModel: PlaylistViewModel,
     onBack: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
     var playlistWithSongs by remember { mutableStateOf<PlaylistWithSongs?>(null) }
     var showAddSongDialog by remember { mutableStateOf(false) }
 
-    // CORRECT: Collect the state from the StateFlow into a simple List.
     val availableSongs by playlistViewModel.availableSongs.collectAsState()
 
-    // IMPROVED: This effect will now re-run if the underlying playlist data changes,
-    // keeping the detailed view perfectly in sync automatically.
     LaunchedEffect(playlistId, playlistViewModel.playlists) {
         playlistWithSongs = playlistViewModel.getPlaylistWithSongs(playlistId)
     }
@@ -90,9 +86,8 @@ fun PlaylistDetailScreen(
                         PlaylistSongItem(
                             song = song,
                             onRemove = {
-                                scope.launch {
-                                    playlistViewModel.removeSongFromPlaylist(playlistId, song.id)
-                                }
+                                playlistViewModel.removeSongFromPlaylist(playlistId, song.id)
+                                playlistWithSongs = playlistViewModel.getPlaylistWithSongs(playlistId)
                             }
                         )
                     }
@@ -102,14 +97,12 @@ fun PlaylistDetailScreen(
 
         if (showAddSongDialog) {
             AddSongToPlaylistDialog(
-                // CORRECT: Pass the collected list, not the StateFlow.
                 availableSongs = availableSongs,
                 currentSongIds = songs.map { it.id }.toSet(),
                 onDismiss = { showAddSongDialog = false },
                 onAddSong = { songId ->
-                    scope.launch {
-                        playlistViewModel.addSongToPlaylist(playlistId, songId)
-                    }
+                    playlistViewModel.addSongToPlaylist(playlistId, songId)
+                    playlistWithSongs = playlistViewModel.getPlaylistWithSongs(playlistId)
                 }
             )
         }
@@ -119,8 +112,11 @@ fun PlaylistDetailScreen(
 @Composable
 fun PlaylistSongItem(
     song: Song,
-    onRemove: () -> Unit
+    onRemove: suspend () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    var isRemoving by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,8 +151,21 @@ fun PlaylistSongItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, "Remover da playlist")
+            IconButton(
+                onClick = {
+                    if (isRemoving) return@IconButton
+                    scope.launch {
+                        isRemoving = true
+                        onRemove()
+                    }
+                },
+                enabled = !isRemoving
+            ) {
+                if (isRemoving) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                } else {
+                    Icon(Icons.Default.Delete, "Remover da playlist")
+                }
             }
         }
     }
@@ -167,9 +176,10 @@ fun AddSongToPlaylistDialog(
     availableSongs: List<Song>,
     currentSongIds: Set<String>,
     onDismiss: () -> Unit,
-    onAddSong: (String) -> Unit
+    onAddSong: suspend (String) -> Unit
 ) {
     val songsToAdd = availableSongs.filter { it.id !in currentSongIds }
+    val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -180,26 +190,41 @@ fun AddSongToPlaylistDialog(
             } else {
                 LazyColumn {
                     items(songsToAdd, key = { it.id }) { song ->
+                        var isAdding by remember { mutableStateOf(false) }
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
                             onClick = {
-                                onAddSong(song.id)
-                                onDismiss()
+                                if (isAdding) return@Card
+                                scope.launch {
+                                    isAdding = true
+                                    onAddSong(song.id)
+                                }
                             }
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = song.title,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (song.artist.isNotBlank()) {
-                                    Text(
-                                        text = song.artist,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (isAdding) {
+                                    CircularProgressIndicator(Modifier.size(24.dp))
+                                } else {
+                                    Column {
+                                        Text(
+                                            text = song.title,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (song.artist.isNotBlank()) {
+                                            Text(
+                                                text = song.artist,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

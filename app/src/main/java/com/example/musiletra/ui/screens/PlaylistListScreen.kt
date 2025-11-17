@@ -11,43 +11,38 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.musiletra.data.database.MusicaSalva
+import com.example.musiletra.data.database.Playlist
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SongListScreen(
-    songs: List<MusicaSalva>,
+fun PlaylistListScreen(
+    playlists: List<Playlist>,
     onAdd: () -> Unit,
     onOpen: (Int) -> Unit,
     onEdit: (Int) -> Unit,
     onDelete: (Int) -> Unit,
-    onGoToSearch: () -> Unit,
-    onGoToPlaylists: () -> Unit
+    onBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Musi-Letra") },
-                actions = {
-                    IconButton(onClick = onGoToPlaylists) {
-                        Icon(Icons.Default.List, contentDescription = "Playlists")
-                    }
-                    IconButton(onClick = onGoToSearch) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar Online")
+                title = { Text("Minhas Playlists") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar")
+                Icon(Icons.Default.Add, contentDescription = "Adicionar Playlist")
             }
         }
     ) { padding ->
-        if (songs.isEmpty()) {
+        if (playlists.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -56,20 +51,20 @@ fun SongListScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Default.MusicNote,
+                        imageVector = Icons.Default.LibraryMusic,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Nenhuma música adicionada ainda.",
+                        "Nenhuma playlist criada ainda.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Toque em + para adicionar",
+                        "Toque em + para criar",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
@@ -82,12 +77,12 @@ fun SongListScreen(
                     .padding(padding),
                 contentPadding = PaddingValues(8.dp)
             ) {
-                items(songs, key = { it.id }) { song ->
-                    SongItem(
-                        song,
-                        onOpen = { onOpen(song.id) },
-                        onEdit = { onEdit(song.id) },
-                        onDelete = { onDelete(song.id) }
+                items(playlists, key = { it.id }) { playlist ->
+                    PlaylistItem(
+                        playlist,
+                        onOpen = { onOpen(playlist.id) },
+                        onEdit = { onEdit(playlist.id) },
+                        onDelete = { onDelete(playlist.id) }
                     )
                 }
             }
@@ -96,7 +91,15 @@ fun SongListScreen(
 }
 
 @Composable
-fun SongItem(song: MusicaSalva, onOpen: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun PlaylistItem(
+    playlist: Playlist,
+    onOpen: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val musicCount = if (playlist.musicaIds.isEmpty()) 0
+    else playlist.musicaIds.split(",").size
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -112,19 +115,17 @@ fun SongItem(song: MusicaSalva, onOpen: () -> Unit, onEdit: () -> Unit, onDelete
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        song.titulo,
+                        playlist.nome,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (song.artista.isNotBlank()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            song.artista,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "$musicCount música${if (musicCount != 1) "s" else ""}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
                 }
                 Row {
                     IconButton(onClick = onEdit) {
@@ -143,14 +144,14 @@ fun SongItem(song: MusicaSalva, onOpen: () -> Unit, onEdit: () -> Unit, onDelete
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                song.letra,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            if (playlist.descricao.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    playlist.descricao,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }

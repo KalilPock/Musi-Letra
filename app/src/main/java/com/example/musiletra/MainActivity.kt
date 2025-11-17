@@ -9,17 +9,26 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.musiletra.ui.AppRoot
+import com.example.musiletra.ui.PlaylistViewModel
 import com.example.musiletra.ui.SongViewModel
+import com.example.musiletra.ui.theme.MusiLetraTheme
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: SongViewModel by viewModels()
+    private val songViewModel: SongViewModel by viewModels()
+    private val playlistViewModel: PlaylistViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    AppRoot(viewModel)
+            MusiLetraTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppRoot(
+                        songViewModel = songViewModel,
+                        playlistViewModel = playlistViewModel
+                    )
                 }
             }
         }

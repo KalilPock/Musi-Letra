@@ -2,10 +2,21 @@ package com.example.musiletra.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Cores do tema escuro
+val MusicPurple80 = Color(0xFFB794F6)
+val MusicBlue80 = Color(0xFF90CAF9)
+val MusicPink80 = Color(0xFFF48FB1)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Cores do tema claro - tons vibrantes de música
+val MusicPurple40 = Color(0xFF7C3AED)
+val MusicBlue40 = Color(0xFF1E88E5)
+val MusicPink40 = Color(0xFFE91E63)
+
+// Mantendo compatibilidade com nomes antigos
+val Purple80 = MusicPurple80
+val PurpleGrey80 = MusicBlue80
+val Pink80 = MusicPink80
+
+val Purple40 = MusicPurple40
+val PurpleGrey40 = MusicBlue40
+val Pink40 = MusicPink40

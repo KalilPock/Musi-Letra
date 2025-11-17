@@ -3,15 +3,20 @@ package com.example.musiletra.ui
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.musiletra.ui.screens.AddEditSongScreen
 import com.example.musiletra.ui.screens.OnlineSearchScreen
 import com.example.musiletra.ui.screens.PlaylistDetailScreen
+import com.example.musiletra.ui.screens.PlaylistInfoScreen
 import com.example.musiletra.ui.screens.PlaylistListScreen
 import com.example.musiletra.ui.screens.SongDetailScreen
 import com.example.musiletra.ui.screens.SongListScreen
+import com.example.musiletra.ui.viewmodels.PlaylistViewModel
+import com.example.musiletra.ui.viewmodels.SongViewModel
 
 @Composable
 fun AppRoot(
@@ -23,19 +28,22 @@ fun AppRoot(
     val songs = songViewModel.songs
     val playlists = playlistViewModel.playlists
 
-    NavHost(navController = navController, startDestination = "songList") {
-        composable("songList") {
+    NavHost(navController = navController, startDestination = Routes.SONG_LIST.route) {
+        // Song List Screen
+        composable(Routes.SONG_LIST.route) {
             SongListScreen(
                 songs = songs,
-                onAdd = { navController.navigate("addSong") },
-                onOpen = { id -> navController.navigate("songDetail/$id") },
-                onEdit = { id -> navController.navigate("editSong/$id") },
+                onAdd = { navController.navigate(Routes.ADD_SONG.route) },
+                onOpen = { id -> navController.navigate(Routes.songDetails(id)) },
+                onEdit = { id -> navController.navigate(Routes.editSong(id)) },
                 onDelete = { id -> songViewModel.deleteSong(id) },
-                onGoToSearch = { navController.navigate("onlineSearch") },
-                onGoToPlaylists = { navController.navigate("playlistList") }
+                onGoToSearch = { navController.navigate(Routes.ONLINE_SEARCH.route) },
+                onGoToPlaylists = { navController.navigate(Routes.PLAYLISTS.route) }
             )
         }
-        composable("addSong") {
+
+        // Add Song Screen
+        composable(Routes.ADD_SONG.route) {
             AddEditSongScreen(
                 onSave = { title, artist, lyrics ->
                     songViewModel.addSong(title, artist, lyrics)
@@ -44,7 +52,12 @@ fun AppRoot(
                 onCancel = { navController.popBackStack() }
             )
         }
-        composable("editSong/{songId}") { backStackEntry ->
+
+        // Edit Song Screen
+        composable(
+            route = Routes.EDIT_SONG.route,
+            arguments = listOf(navArgument("songId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val songId = backStackEntry.arguments?.getString("songId") ?: return@composable
             val song = songs.firstOrNull { it.id == songId } ?: return@composable
             AddEditSongScreen(
@@ -56,19 +69,23 @@ fun AppRoot(
                 onCancel = { navController.popBackStack() }
             )
         }
-        composable("songDetail/{songId}") { backStackEntry ->
+
+        // Song Details Screen
+        composable(
+            route = Routes.SONG_DETAILS.route,
+            arguments = listOf(navArgument("songId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val songId = backStackEntry.arguments?.getString("songId") ?: return@composable
             val song = songs.firstOrNull { it.id == songId } ?: return@composable
             SongDetailScreen(
                 song = song,
                 onBack = { navController.popBackStack() },
-                onEdit = { navController.navigate("editSong/$songId") },
+                onEdit = { navController.navigate(Routes.editSong(songId)) },
                 onDelete = { id ->
                     songViewModel.deleteSong(id)
                     navController.popBackStack()
                 },
                 onShare = {
-                    // Criar Intent de compartilhamento (ACTION_SEND)
                     val shareText = buildString {
                         append("🎵 ${song.title}\n")
                         if (song.artist.isNotBlank()) {
@@ -88,7 +105,9 @@ fun AppRoot(
                 }
             )
         }
-        composable("onlineSearch") {
+
+        // Online Search Screen
+        composable(Routes.ONLINE_SEARCH.route) {
             OnlineSearchScreen(
                 songs = songViewModel.onlineSearchResults,
                 onSearch = { query -> songViewModel.searchOnline(query) },
@@ -99,23 +118,46 @@ fun AppRoot(
                 onBack = { navController.popBackStack() }
             )
         }
-        composable("playlistList") {
+
+        // Playlists Screen
+        composable(Routes.PLAYLISTS.route) {
             PlaylistListScreen(
                 playlists = playlists,
                 onCreatePlaylist = { name, description ->
                     playlistViewModel.createPlaylist(name, description)
                 },
-                onOpenPlaylist = { id -> navController.navigate("playlistDetail/$id") },
+                onOpenPlaylist = { id -> navController.navigate(Routes.playlistDetails(id)) },
+                onPlaylistInfo = { id -> navController.navigate(Routes.playlistInfo(id)) },
                 onDeletePlaylist = { id -> playlistViewModel.deletePlaylist(id) },
                 onBack = { navController.popBackStack() }
             )
         }
-        composable("playlistDetail/{playlistId}") { backStackEntry ->
-            val playlistId = backStackEntry.arguments?.getString("playlistId") ?: return@composable
+
+        // Playlist Details Screen
+        composable(
+            route = Routes.PLAYLIST_DETAILS.route,
+            arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getInt("playlistId") ?: return@composable
             PlaylistDetailScreen(
                 playlistId = playlistId,
                 playlistViewModel = playlistViewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onInfo = { navController.navigate(Routes.playlistInfo(playlistId)) }
+            )
+        }
+
+        // Playlist Info Screen
+        composable(
+            route = Routes.PLAYLIST_INFO.route,
+            arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getInt("playlistId") ?: return@composable
+            PlaylistInfoScreen(
+                playlistId = playlistId,
+                playlistViewModel = playlistViewModel,
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Routes.playlistDetails(playlistId)) }
             )
         }
     }

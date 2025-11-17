@@ -8,14 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.musiletra.data.AppDatabase
 import com.example.musiletra.data.PlaylistRepository
 import com.example.musiletra.data.SongRepository
+import com.example.musiletra.data.database.AppDatabase
 import com.example.musiletra.ui.AppRoot
-import com.example.musiletra.ui.PlaylistViewModel
-import com.example.musiletra.ui.PlaylistViewModelFactory
-import com.example.musiletra.ui.SongViewModel
-import com.example.musiletra.ui.SongViewModelFactory
+import com.example.musiletra.ui.viewmodels.PlaylistViewModel
+import com.example.musiletra.ui.viewmodels.PlaylistViewModelFactory
+import com.example.musiletra.ui.viewmodels.SongViewModel
+import com.example.musiletra.ui.viewmodels.SongViewModelFactory
 
 class MainActivity : ComponentActivity() {
 

@@ -1,30 +1,19 @@
 package com.example.musiletra.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Title
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.musiletra.model.Song
 
@@ -41,16 +30,42 @@ fun AddEditSongScreen(
 
     val isEditing = existing != null
     val titleText = if (isEditing) "Editar Música" else "Nova Música"
+    val canSave = title.isNotBlank() && lyrics.isNotBlank()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(titleText) },
+                title = {
+                    Text(
+                        titleText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
                     }
-                }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (canSave) {
+                                onSave(title.trim(), artist.trim(), lyrics.trim())
+                            }
+                        },
+                        enabled = canSave
+                    ) {
+                        Icon(
+                            Icons.Default.Save,
+                            contentDescription = "Salvar",
+                            tint = if (canSave) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { paddingValues ->
@@ -58,61 +73,138 @@ fun AddEditSongScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Título Field
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Título") },
+                label = { Text("Título *") },
+                placeholder = { Text("Digite o título da música") },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Title,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = title.isBlank() && title.isNotEmpty(),
+                supportingText = {
+                    if (title.isBlank() && title.isNotEmpty()) {
+                        Text("O título é obrigatório")
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Artista Field
             OutlinedTextField(
                 value = artist,
                 onValueChange = { artist = it },
                 label = { Text("Artista") },
+                placeholder = { Text("Digite o nome do artista (opcional)") },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Letra Field
             OutlinedTextField(
                 value = lyrics,
                 onValueChange = { lyrics = it },
-                label = { Text("Letra") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                maxLines = 15
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    if (title.isNotBlank() && lyrics.isNotBlank()) {
-                        onSave(title.trim(), artist.trim(), lyrics.trim())
+                label = { Text("Letra *") },
+                placeholder = { Text("Digite a letra da música aqui...") },
+                leadingIcon = {
+                    Column(modifier = Modifier.padding(top = 12.dp)) {
+                        Icon(
+                            Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank() && lyrics.isNotBlank()
-            ) {
-                Text(if (isEditing) "Salvar Alterações" else "Adicionar Música")
-            }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 250.dp),
+                minLines = 10,
+                maxLines = 20,
+                isError = lyrics.isBlank() && lyrics.isNotEmpty(),
+                supportingText = {
+                    if (lyrics.isBlank() && lyrics.isNotEmpty()) {
+                        Text("A letra é obrigatória")
+                    } else {
+                        Text("${lyrics.length} caracteres")
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Save Button
+            Button(
+                onClick = {
+                    if (canSave) {
+                        onSave(title.trim(), artist.trim(), lyrics.trim())
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = canSave,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(Icons.Default.Save, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    if (isEditing) "Salvar Alterações" else "Adicionar Música",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            // Cancel Button
             OutlinedButton(
                 onClick = onCancel,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
             ) {
-                Text("Cancelar")
+                Text(
+                    "Cancelar",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

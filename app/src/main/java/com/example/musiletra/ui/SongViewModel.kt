@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musiletra.data.AudDSong
+import com.example.musiletra.model.AudDSong
 import com.example.musiletra.data.RetrofitClient
 import com.example.musiletra.data.SongRepository
 import com.example.musiletra.data.database.AppDatabase
@@ -72,7 +72,10 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
                     onlineSearchResults = response.result ?: emptyList()
                     println("✅ Resultados atualizados: ${onlineSearchResults.size} músicas encontradas")
                 } else {
-                    println("⚠️ Status da API não é success: ${response.status}")
+                    // Imprime a mensagem de erro detalhada da API
+                    val errorMessage = response.error?.message ?: "Unknown error"
+                    val errorCode = response.error?.code ?: -1
+                    println("❌ AudD API Error ($errorCode): $errorMessage")
                     onlineSearchResults = emptyList()
                 }
             } catch (e: Exception) {
